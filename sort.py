@@ -5,17 +5,17 @@ def child(file):
 	#  Check if file is lock or unlock
 	fd = open('datafile.dat.txt','r+')
 	while True:
-		# Exception handling maybe?
+		# Exception handling to check if we can obtain a lock
 		try:
 			fcntl.flock(fd, fcntl.LOCK_EX  | fcntl.LOCK_NB)
 			break
 		except IOError:
 			time.sleep(.03)
 
-	# file is open for writing, lock the file
-	fcntl.flock(fd, fcntl.LOCK_EX)
+	# file is open for writing
 	fd2 = open(file,'r')
 
+	# Create a list of numbers from files
 	main = []
 	for num in fd:
 		if num != '':
@@ -29,15 +29,14 @@ def child(file):
 
 	# Merge the two sorted list
 	main = merge(main,new)
-	print('MERGED:\n',main)
 	# put the file descriptor to the beginning
 	fd.seek(0,0)
 
 	# write to the file
-	print("File: %s is writing..." %file)
+	print("PID: %d File: %s is writing..." % (os.getpid(), file))
 	for num in main:
 		fd.write("%d\n" % num)
-	print("Finished writing")
+	print("Finished writing\n")
 
 	# unlock the main file
 	fcntl.flock(fd, fcntl.LOCK_UN)
@@ -47,9 +46,8 @@ def child(file):
 	fd.close()
 	os._exit(0);
 
-# Merge two sorted list into one list
+# Merge two sorted list into one list (MergeSort Algorithm)
 def merge(l1,l2):
-	print(l1,l2)
 	res = [0] * (len(l1) + len(l2))
 	i = j = k = 0
 	
@@ -74,7 +72,7 @@ def merge(l1,l2):
 
 	return res
 
-
+# Parent create 3 process that writes to the main file
 def parent():
 	files = ['new1.dat.txt', 'new2.dat.txt', 'new3.dat.txt']
 	c = os.fork()

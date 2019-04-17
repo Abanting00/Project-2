@@ -19,30 +19,20 @@ class TestSort(unittest.TestCase):
 		fd.close()
 		fd2.close()
 
+		# Check if both lists are equal
 		self.assertEqual(answer,main)
 		self.test_passed = True
 
 	def setUp(self):
 		self.test_passed = False
-		self.maxDiff = None
 
+	# If test failed, append "Wrong" at end of wrong.txt
 	def tearDown(self):
 		if not self.test_passed:
-			fd = open('ans.dat.txt','r')
-			main = []
-
-			for num in fd:
-				main.append(int(num.rstrip()))   
-			fd.close()
-			fd = open('wrong.txt','w+')
-
-			for num in main:
-				fd.write("%d\n" % num)
+			fd = open('wrong.txt','a+')
+			fd.write("%s\n" % "Wrong")
 
 			fd.close()
-					
-
-
 
 if __name__ == '__main__':
 	unittest.main()
