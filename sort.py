@@ -1,16 +1,16 @@
-import os, unittest, fcntl
+import os, unittest, fcntl, time
 
 def child(file):
 
 	#  Check if file is lock or unlock
+	fd = open('datafile.dat.txt','r+')
 	while True:
 		# Exception handling maybe?
 		try:
-			fd = open('datafile.dat.txt','r+')
 			fcntl.flock(fd, fcntl.LOCK_EX  | fcntl.LOCK_NB)
 			break
 		except IOError:
-			continue
+			time.sleep(.03)
 
 	# file is open for writing, lock the file
 	fcntl.flock(fd, fcntl.LOCK_EX)
@@ -18,45 +18,59 @@ def child(file):
 
 	main = []
 	for num in fd:
-		main.append(int(num.rstrip('\n')))
+		if num != '':
+			main.append(int(num.rstrip()))
 
 	new = []
 	for num in fd2:
-		new.append(int(num.rstrip('\n')))
+		if num != '':
+			new.append(int(num.rstrip()))
 	new.sort()
 
 	# Merge the two sorted list
 	main = merge(main,new)
-
+	print('MERGED:\n',main)
 	# put the file descriptor to the beginning
 	fd.seek(0,0)
 
 	# write to the file
+	print("File: %s is writing..." %file)
 	for num in main:
 		fd.write("%d\n" % num)
-
-	# Close the open files
-	fd2.close()
+	print("Finished writing")
 
 	# unlock the main file
 	fcntl.flock(fd, fcntl.LOCK_UN)
-	
+
+	# Close the open files
+	fd2.close()
+	fd.close()
+	os._exit(0);
 
 # Merge two sorted list into one list
 def merge(l1,l2):
-	res = []
+	print(l1,l2)
+	res = [0] * (len(l1) + len(l2))
 	i = j = k = 0
 	
 	while i < len(l1) and j < len(l2):
 		if l1[i] < l2[j]:
-			res.append(l1[i])
+			res[k] = l1[i]
 			i += 1
 		else:
-			res.append(l2[j])
+			res[k] = l2[j]
 			j += 1
+		k += 1
 
-	res = res + l1[i:]
-	res = res + l2[j:]
+	while i < len(l1):
+		res[k] = l1[i]
+		i += 1
+		k += 1
+
+	while j < len(l2):
+		res[k] = l2[j]
+		j += 1
+		k += 1
 
 	return res
 
@@ -82,5 +96,6 @@ def parent():
 	return
 
 if __name__ == '__main__':
+	os.system("cp original.dat.txt datafile.dat.txt")
 	parent()
 
